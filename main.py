@@ -128,8 +128,8 @@ def main():
         raise FileNotFoundError(f"Source folder '{args.source_path}' doesn't exist!")
 
     try:
-        if args.interval == 0:
-            raise ValueError("Synchronization interval cannot be 0!")
+        if args.interval == 0 or args.interval < 0:
+            raise ValueError("Synchronization interval cannot be zero or negative!")
 
         if not os.access(args.source_path, os.R_OK) or not os.access(args.replica_path, os.W_OK):
             raise PermissionError("Insufficient permissions for source or replica folder!")
