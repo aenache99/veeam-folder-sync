@@ -7868,3 +7868,21 @@
 2023-08-24 15:34:29,450 - INFO - Copied test1\bookshelf-at-dunster-house-library.jpg to test2\bookshelf-at-dunster-house-library.jpg
 2023-08-24 15:34:29,451 - INFO - Copied test1\test.txt to test2\test.txt
 2023-08-24 15:34:29,451 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:34:29
+2023-08-24 15:46:58,051 - INFO - Synchronization started at 2023-08-24 15:46:58 with an interval of 60 seconds
+2023-08-24 15:46:58,051 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:46:58
+2023-08-24 15:47:58,052 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:47:58
+2023-08-24 15:48:58,053 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:48:58
+2023-08-24 15:49:58,055 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:49:58
+2023-08-24 15:50:58,057 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:50:58
+2023-08-24 15:52:07,489 - INFO - Synchronization started at 2023-08-24 15:52:07 with an interval of 60 seconds
+2023-08-24 15:52:07,490 - INFO - Source folder test1 and replica folder test2 have been successfully synchronized at 2023-08-24 15:52:07
+2023-08-24 15:52:10,520 - INFO - The synchronization was interrupted at the user's request.
+2023-08-24 15:52:30,499 - INFO - Synchronization started at 2023-08-24 15:52:30 with an interval of 60 seconds
+2023-08-24 15:52:30,499 - INFO - Removed file test2\bookshelf-at-dunster-house-library.jpg
+2023-08-24 15:52:30,500 - INFO - Removed file test2\test.txt
+2023-08-24 15:52:30,500 - INFO - Source folder errorfolder and replica folder test2 have been successfully synchronized at 2023-08-24 15:52:30
+2023-08-24 15:52:45,024 - INFO - The synchronization was interrupted at the user's request.
+2023-08-24 15:54:30,961 - ERROR - Source folder 'errorfolder' doesn't exist!
+2023-08-24 15:56:16,061 - ERROR - Source folder 'errorfolder' doesn't exist!
+2023-08-24 15:56:28,226 - ERROR - Synchronization interval cannot be 0!
+2023-08-24 16:03:15,314 - ERROR - Synchronization interval cannot be 0!

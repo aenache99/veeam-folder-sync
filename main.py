@@ -6,7 +6,7 @@ It implements a Folder Synchronization module as of VEEAM's specifications.
 
 Besides the specifications, multiple things have been taken into consideration:
 
-- Allowing for position independent named arguments, or **kwargs.
+- The CLI arguments are given using position-independent named arguments,
 - Exception handling for various situations, such as interval being
 set to 0, Permission errors or the absence of the Source folder.
 - The code was broken into multiple functions, for ease of
@@ -17,7 +17,7 @@ And besides those mentioned, some other aspects were implemented as well:
 - Version Control integration to GitHub through the PyCharm IDE
 - Linting with PyLint, to enforce a cohesive coding style
 - Creation of a Dockerfile, in order for the project to be passed through a CI pipeline in
-my personal GitHub repo and a possible deployment to Kubernetes
+my personal GitHub repo and a possible deployment to a K8s engine like GKE
 - Usage of PyTest in order to ensure good testing practices.
 - Created a CI pipeline using GitHub Actions to automate the
 Linting and Testing processes, in order to ensure quality code is being provided
@@ -120,19 +120,28 @@ def synchronize(source_path, replica_path):
 def main():
     """Takes in the arguments required for syncing"""
     parser = argparse.ArgumentParser(description="Synchronize two folders")
-    parser.add_argument("--source", dest="source_path", required=True,
+    parser.add_argument("-s", "--source", dest="source_path", required=True,
                         help="path to source folder")
-    parser.add_argument("--replica", dest="replica_path", required=True,
+    parser.add_argument("-r", "--replica", dest="replica_path", required=True,
                         help="path to replica folder")
-    parser.add_argument("--log", dest="log_path", required=True,
+    parser.add_argument("-l", "--log", dest="log_path", required=True,
                         help="path to log file")
-    parser.add_argument("--interval", dest="interval", type=int, required=True,
+    parser.add_argument("-i", "--interval", dest="interval", type=int, required=True,
                         help="synchronization interval in seconds")
     args = parser.parse_args()
 
     setup_logging(args.log_path)
 
     try:
+        if not os.path.exists(args.source_path):
+            raise FileNotFoundError(f"Source folder '{args.source_path}' doesn't exist!")
+
+        if args.interval == 0:
+            raise ValueError("Synchronization interval cannot be 0!")
+
+        if not os.access(args.source_path, os.R_OK) or not os.access(args.replica_path, os.W_OK):
+            raise PermissionError("Insufficient permissions for source or replica folder!")
+
         time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         logging.info("Synchronization started at %s with an interval of %s seconds",
                      time_now, args.interval)
@@ -142,12 +151,14 @@ def main():
                          args.source_path, args.replica_path,
                          time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             time.sleep(args.interval)
-    except FileNotFoundError:
-        logging.info("The source folder doesn't exist!")
-    except PermissionError:
-        logging.info("The folder(s) don't have the permissions necessary!")
-    except ValueError:
-        logging.info("Value error!")
+    except FileNotFoundError as e:
+        logging.error(str(e))
+    except PermissionError as e:
+        logging.error(str(e))
+    except ValueError as e:
+        logging.error(str(e))
+    except KeyboardInterrupt:
+        logging.info("The user has interrupted the synchronization.")
 
 
 if __name__ == "__main__":
