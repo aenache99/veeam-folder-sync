@@ -23,4 +23,4 @@ jobs:
         run: find . -name '*.py' -exec pylint {} \;
           
       - name: Run tests with PyTest
-        run: pipenv run test -v
+        run: coverage run -m pytest  -v -s
