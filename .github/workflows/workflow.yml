@@ -23,4 +23,4 @@ jobs:
         run: find . -name '*.py' -exec pylint {} \;
           
       - name: Run tests with PyTest
-        run: find main.py - exec pytest{} \;
+        run: pipenv run test -v
