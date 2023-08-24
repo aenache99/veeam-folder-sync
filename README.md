@@ -20,3 +20,10 @@ my personal GitHub repo and a possible deployment to a K8s engine like GKE
 - Created a CI pipeline using GitHub Actions to automate the
 Linting and Testing processes, in order to ensure quality code is being provided
 in the event of working in an Agile team.
+
+BONUS:
+The repository also contains a attempt at the PowerShell task just to exercise my Shell scripting skills. It is mostly the same as the Python task, sans the scheduling since it's been handled by PSScheduledJob (much like cronjobs are in Linux). Unfortunately I didn't run it since Powershell scripts must be digitally signed (which make sense, in order to prevent malicious shell scripts from being run).
+
+FUTURE IMPROVEMENTS:
+- I see the possibility of creating a Django project incorporating the Folder Sync backend module in order to perform the syncing using a graphical interface instead of the CLI.
+- Deployment to Kubernetes, specifically to GKE.
