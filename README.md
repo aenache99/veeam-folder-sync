@@ -1,4 +1,8 @@
 # veeam-folder-sync
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python 3.9](https://img.shields.io/badge/Python-3.9-green.svg)](https://shields.io/)
+
 This repository contains the files associated with the Folder Sync technical assignment written in Python.
 
 It utilizes only 1st party Python libraries (sans the PyTest and PyLint libraries).
