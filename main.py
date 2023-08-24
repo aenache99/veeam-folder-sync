@@ -1,4 +1,28 @@
-"""The Folder Sync Python module"""
+"""The Folder Sync Python module:
+
+It utilizes only 1st party Python libraries (sans the PyTest and PyLint libraries).
+
+It implements a Folder Synchronization module as of VEEAM's specifications.
+
+Besides the specifications, multiple things have been taken into consideration:
+
+- Allowing for position independent named arguments, or **kwargs.
+- Exception handling for various situations, such as interval being
+set to 0, Permission errors or the absence of the Source folder.
+- The code was broken into multiple functions, for ease of
+development and reading.
+
+And besides those mentioned, some other aspects were implemented as well:
+
+- Version Control integration to GitHub through the PyCharm IDE
+- Linting with PyLint, to enforce a cohesive coding style
+- Creation of a Dockerfile, in order for the project to be passed through a CI pipeline in
+my personal GitHub repo and a possible deployment to Kubernetes
+- Usage of PyTest in order to ensure good testing practices.
+- Created a CI pipeline using GitHub Actions to automate the
+Linting and Testing processes, in order to ensure quality code is being provided
+in the event of working in an Agile team.
+"""
 
 import os
 import shutil
@@ -25,18 +49,19 @@ def copy_changed_files(source_filepath, replica_filepath):
                 os.path.getmtime(source_filepath) > os.path.getmtime(replica_filepath)):
             shutil.copy2(source_filepath, replica_filepath)
             logging.info("Copied %s to %s", source_filepath, replica_filepath)
-    except Exception as e:
-        logging.error("Error while copying %s to %s: %s", source_filepath, replica_filepath, e)
+    except PermissionError as permission_error:
+        logging.error("Error while copying %s to %s: %s",
+                      source_filepath, replica_filepath, permission_error)
 
 
 def create_missing_directory(replica_dirpath):
-    """A function meant for creating the missing directory"""
+    """A function meant for creating the missing replica directory"""
     try:
         if not os.path.exists(replica_dirpath):
             os.makedirs(replica_dirpath)
             logging.info("Created directory %s", replica_dirpath)
-    except Exception as e:
-        logging.error("Error while creating directory %s: %s", replica_dirpath, e)
+    except PermissionError as permission_error:
+        logging.error("Error while creating directory %s: %s", replica_dirpath, permission_error)
 
 
 def remove_extra_files(replica_filepath):
@@ -44,8 +69,8 @@ def remove_extra_files(replica_filepath):
     try:
         os.remove(replica_filepath)
         logging.info("Removed file %s", replica_filepath)
-    except Exception as e:
-        logging.error("Error while removing file %s: %s", replica_filepath, e)
+    except PermissionError as permission_error:
+        logging.error("Error while removing file %s: %s", replica_filepath, permission_error)
 
 
 def remove_extra_directory(replica_dirpath):
@@ -53,8 +78,8 @@ def remove_extra_directory(replica_dirpath):
     try:
         shutil.rmtree(replica_dirpath)
         logging.info("Removed directory %s", replica_dirpath)
-    except Exception as e:
-        logging.error("Error while removing directory %s: %s", replica_dirpath, e)
+    except PermissionError as permission_error:
+        logging.error("Error while removing directory %s: %s", replica_dirpath, permission_error)
 
 
 def synchronize(source_path, replica_path):
@@ -108,15 +133,21 @@ def main():
     setup_logging(args.log_path)
 
     try:
+        time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        logging.info("Synchronization started at %s with an interval of %s seconds",
+                     time_now, args.interval)
         while True:
-            time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            logging.info("Synchronization started at %s", time_now)
             synchronize(args.source_path, args.replica_path)
-            logging.info("Synchronization ended at %s",
+            logging.info("Source folder %s and replica folder %s have been successfully synchronized at %s",
+                         args.source_path, args.replica_path,
                          time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             time.sleep(args.interval)
-    except KeyboardInterrupt:
-        logging.info("Synchronization process interrupted by user")
+    except FileNotFoundError:
+        logging.info("The source folder doesn't exist!")
+    except PermissionError:
+        logging.info("The folder(s) don't have the permissions necessary!")
+    except ValueError:
+        logging.info("Value error!")
 
 
 if __name__ == "__main__":
