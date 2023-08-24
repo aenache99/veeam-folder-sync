@@ -4,14 +4,6 @@ It utilizes only 1st party Python libraries (sans the PyTest and PyLint librarie
 
 It implements a Folder Synchronization module as of VEEAM's specifications.
 
-Besides the specifications, multiple things have been taken into consideration:
-
-- The CLI arguments are given using position-independent named arguments,
-- Exception handling for various situations, such as interval being
-set to 0, Permission errors or the absence of the Source folder.
-- The code was broken into multiple functions, for ease of
-development and reading.
-
 And besides those mentioned, some other aspects were implemented as well:
 
 - Version Control integration to GitHub through the PyCharm IDE
@@ -132,10 +124,10 @@ def main():
 
     setup_logging(args.log_path)
 
-    try:
-        if not os.path.exists(args.source_path):
-            raise FileNotFoundError(f"Source folder '{args.source_path}' doesn't exist!")
+    if not os.path.exists(args.source_path):
+        raise FileNotFoundError(f"Source folder '{args.source_path}' doesn't exist!")
 
+    try:
         if args.interval == 0:
             raise ValueError("Synchronization interval cannot be 0!")
 

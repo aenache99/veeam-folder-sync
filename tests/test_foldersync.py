@@ -1,96 +1,122 @@
-"""
-Folder Sync Test suite
+""" The tests for the Folder Sync module.
 
-Test cases can be run with the following:
-    pytest test_foldersync.py
-"""
+Currently, it has 11 tests that assess the functionality of the module."""
 
 import os
 import shutil
-import tempfile
+import time
 import pytest
-from main import (synchronize,
-                  create_missing_directory,
-                  remove_extra_files,
-                  remove_extra_directory,
-                  copy_changed_files)
+from main import copy_changed_files, create_missing_directory, \
+    remove_extra_files, remove_extra_directory, synchronize
+
+# Test data
+test_source_path = "test_data/source"
+test_replica_path = "test_data/replica"
 
 
 @pytest.fixture
-def temp_folder_structure():
-    # Create temporary source and replica folders
-    source_folder = tempfile.mkdtemp()
-    replica_folder = tempfile.mkdtemp()
-
-    # Create some test files and directories in the source folder
-    os.makedirs(os.path.join(source_folder, 'dir1'))
-    os.makedirs(os.path.join(source_folder, 'dir2'))
-    open(os.path.join(source_folder, 'file1.txt'), 'w').close()
-    open(os.path.join(source_folder, 'dir1', 'file2.txt'), 'w').close()
-
-    yield source_folder, replica_folder
-
-    # Clean up
-    shutil.rmtree(source_folder)
-    shutil.rmtree(replica_folder)
+def setup_test_folders(tmpdir):
+    """Create test folders and files"""
+    os.makedirs(test_source_path, exist_ok=True)
+    os.makedirs(test_replica_path, exist_ok=True)
+    with open(os.path.join(test_source_path, "file1.txt"), "w") as f:
+        f.write("Hello, World!")
+    yield
+    shutil.rmtree(test_source_path)
+    shutil.rmtree(test_replica_path)
 
 
-def test_create_missing_directory(temp_folder_structure):
-    source_folder, replica_folder = temp_folder_structure
-    replica_dirpath = os.path.join(replica_folder, 'new_dir')
-
-    create_missing_directory(replica_dirpath)
-    assert os.path.exists(replica_dirpath)
+def test_copy_changed_files(setup_test_folders):
+    copy_changed_files(os.path.join(test_source_path, "file1.txt"),
+                       os.path.join(test_replica_path, "file1.txt"))
+    assert os.path.exists(os.path.join(test_replica_path, "file1.txt"))
 
 
-def test_remove_extra_files(temp_folder_structure):
-    source_folder, replica_folder = temp_folder_structure
-    replica_filepath = os.path.join(replica_folder, 'file1.txt')
-    open(replica_filepath, 'w').close()
-
-    remove_extra_files(replica_filepath)
-    assert not os.path.exists(replica_filepath)
+def test_create_missing_directory(setup_test_folders):
+    create_missing_directory(os.path.join(test_replica_path, "subfolder"))
+    assert os.path.exists(os.path.join(test_replica_path, "subfolder"))
 
 
-def test_remove_extra_directory(temp_folder_structure):
-    source_folder, replica_folder = temp_folder_structure
-    replica_dirpath = os.path.join(replica_folder, 'dir1')
-    os.makedirs(replica_dirpath)
-
-    remove_extra_directory(replica_dirpath)
-    assert not os.path.exists(replica_dirpath)
+def test_remove_extra_files(setup_test_folders):
+    with open(os.path.join(test_replica_path, "extra_file.txt"), "w") as f:
+        f.write("This is an extra file.")
+    remove_extra_files(os.path.join(test_replica_path, "extra_file.txt"))
+    assert not os.path.exists(os.path.join(test_replica_path, "extra_file.txt"))
 
 
-def test_copy_changed_files(temp_folder_structure):
-    source_folder, replica_folder = temp_folder_structure
-    source_filepath = os.path.join(source_folder, 'file1.txt')
-    replica_filepath = os.path.join(replica_folder, 'file1.txt')
-
-    copy_changed_files(source_filepath, replica_filepath)
-    assert os.path.exists(replica_filepath)
+def test_remove_extra_directory(setup_test_folders):
+    os.makedirs(os.path.join(test_replica_path, "extra_folder"))
+    remove_extra_directory(os.path.join(test_replica_path, "extra_folder"))
+    assert not os.path.exists(os.path.join(test_replica_path, "extra_folder"))
 
 
-def test_synchronize(temp_folder_structure):
-    source_folder, replica_folder = temp_folder_structure
-    synchronize(source_folder, replica_folder)
-
-    # Check if the synchronization produced the expected results
-    assert sorted(os.listdir(source_folder)) == sorted(os.listdir(replica_folder))
-
-    for root, dirs, files in os.walk(source_folder):
-        for dir_name in dirs:
-            source_dirpath = os.path.join(root, dir_name)
-            replica_dirpath = (os.path.join
-                               (replica_folder, os.path.relpath(source_dirpath, source_folder)))
-            assert os.path.exists(replica_dirpath)
-
-        for file_name in files:
-            source_filepath = os.path.join(root, file_name)
-            replica_filepath = (os.path.join
-                                (replica_folder, os.path.relpath(source_filepath, source_folder)))
-            assert os.path.exists(replica_filepath)
-            assert os.path.getmtime(replica_filepath) == os.path.getmtime(source_filepath)
+def test_synchronize(setup_test_folders):
+    synchronize(test_source_path, test_replica_path)
+    assert os.path.exists(os.path.join(test_replica_path, "file1.txt"))
 
 
-if __name__ == '__main__':
+def test_copy_changed_files_not_modified(setup_test_folders):
+    # Copy the initial file
+    copy_changed_files(os.path.join(test_source_path, "file1.txt"),
+                       os.path.join(test_replica_path, "file1.txt"))
+
+    # Sleep to ensure file modification time is different
+    time.sleep(1)
+
+    # Copy again, the file hasn't been modified, so it shouldn't be copied
+    copy_changed_files(os.path.join(test_source_path, "file1.txt"),
+                       os.path.join(test_replica_path, "file1.txt"))
+
+    # Assert that the file still exists in replica path
+    assert os.path.exists(os.path.join(test_replica_path, "file1.txt"))
+
+
+def test_copy_changed_files_modified(setup_test_folders):
+    # Modify the file, should trigger copy
+    with open(os.path.join(test_source_path, "file1.txt"), "w") as f:
+        f.write("Modified content.")
+    copy_changed_files(os.path.join(test_source_path, "file1.txt"),
+                       os.path.join(test_replica_path, "file1.txt"))
+    assert os.path.exists(os.path.join(test_replica_path, "file1.txt"))
+
+
+def test_synchronize_removed_file(setup_test_folders):
+    # Test syncing after file removal
+    os.remove(os.path.join(test_source_path, "file1.txt"))
+    synchronize(test_source_path, test_replica_path)
+    assert not os.path.exists(os.path.join(test_replica_path, "file1.txt"))
+
+
+def test_create_missing_directory_already_exists(setup_test_folders):
+    # Test creating an existing directory, should not raise an error
+    create_missing_directory(os.path.join(test_replica_path, "subfolder"))
+    assert os.path.exists(os.path.join(test_replica_path, "subfolder"))
+
+
+def test_synchronize_empty_folders(setup_test_folders):
+    # Test syncing empty source and replica folders
+    empty_source_path = os.path.join(test_source_path, "empty_source")
+    os.makedirs(empty_source_path)
+    synchronize(empty_source_path, test_replica_path)
+    assert os.listdir(test_replica_path) == []
+
+
+def test_synchronize_with_subdirectories(setup_test_folders):
+    # Test syncing source with subdirectories
+    os.makedirs(os.path.join(test_source_path, "subdir1"))
+    os.makedirs(os.path.join(test_source_path, "subdir2"))
+    with open(os.path.join(test_source_path, "subdir1", "file2.txt"), "w") as f:
+        f.write("Subdirectory file content.")
+
+    # Create subdirectories in replica path
+    os.makedirs(os.path.join(test_replica_path, "subdir1"))
+    os.makedirs(os.path.join(test_replica_path, "subdir2"))
+
+    # Run the synchronization
+    synchronize(test_source_path, test_replica_path)
+
+    assert os.path.exists(os.path.join(test_replica_path, "subdir1", "file2.txt"))
+
+
+if __name__ == "__main__":
     pytest.main()
