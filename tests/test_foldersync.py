@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """ The tests for the Folder Sync module.
 
 Currently, it has 11 tests that assess the functionality of the module."""

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """The Folder Sync Python module:
 
 It utilizes only 1st party Python libraries (sans the PyTest and PyLint libraries).
